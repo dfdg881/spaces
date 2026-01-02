@@ -62,10 +62,6 @@ fi
 
 log_with_style "SUCCESS" "🎉  容器启动成功!"
 
-tail -f /dev/null
-
-exec "$@"
-
 # 初始化认证信息
 echo -e "##########写入登陆信息############"
 dir_root=/ql && source /ql/shell/api.sh 
