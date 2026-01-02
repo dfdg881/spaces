@@ -1,65 +1,42 @@
 #!/bin/bash
 
-export PATH="$HOME/bin:$PATH"
-
 dir_shell=/ql/shell
 . $dir_shell/share.sh
-
-export_ql_envs() {
-  export BACK_PORT="${ql_port}"
-  export GRPC_PORT="${ql_grpc_port}"
-}
-
-log_with_style() {
-  local level="$1"
-  local message="$2"
-  local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-  printf "\n[%s] [%7s]  %s\n" "${timestamp}" "${level}" "${message}"
-}
-
-# 写入 rclone 配置（如果通过环境变量传入）
-if [ -n "$RCLONE_CONF" ]; then
-    echo -e "======================写入rclone配置========================\n"
-    mkdir -p ~/.config/rclone
-    echo "$RCLONE_CONF" > ~/.config/rclone/rclone.conf
-    echo "Rclone 配置已写入"
-fi
-
-echo -e "##########启动容器############"
-# Fix DNS resolution issues in Alpine Linux
-# Alpine uses musl libc which has known DNS resolver issues with certain domains
-# Adding ndots:0 prevents unnecessary search domain appending
-if [ -f /etc/alpine-release ]; then
-  if ! grep -q "^options ndots:0" /etc/resolv.conf 2>/dev/null; then
-    echo "options ndots:0" >> /etc/resolv.conf
-    log_with_style "INFO" "🔧  0. 已配置 DNS 解析优化 (ndots:0)"
-  fi
-fi
-
-log_with_style "INFO" "🚀  1. 检测配置文件..."
-load_ql_envs
-export_ql_envs
 . $dir_shell/env.sh
+
+echo -e "======================写入rclone配置========================\n"
+echo "$RCLONE_CONF" > ~/.config/rclone/rclone.conf
+
+echo -e "======================1. 检测配置文件========================\n"
 import_config "$@"
 fix_config
 
-# Try to initialize PM2, but don't fail if it doesn't work
-pm2 l &>/dev/null || log_with_style "WARN" "PM2 初始化可能失败，将在启动时尝试使用备用方案"
+pm2 l &>/dev/null
 
-log_with_style "INFO" "⚙️  2. 启动 pm2 服务..."
+echo -e "======================2. 安装依赖========================\n"
+patch_version
+
+echo -e "======================4. 启动pm2服务========================\n"
+reload_update
 reload_pm2
 
 if [[ $AutoStartBot == true ]]; then
-  log_with_style "INFO" "🤖  3. 启动 bot..."
+  echo -e "======================5. 启动bot========================\n"
   nohup ql bot >$dir_log/bot.log 2>&1 &
+  echo -e "bot后台启动中...\n"
 fi
 
 if [[ $EnableExtraShell == true ]]; then
-  log_with_style "INFO" "🛠️  4. 执行自定义脚本..."
+  echo -e "====================6. 执行自定义脚本========================\n"
   nohup ql extra >$dir_log/extra.log 2>&1 &
+  echo -e "自定义脚本后台执行中...\n"
 fi
 
-log_with_style "SUCCESS" "🎉  容器启动成功!"
+
+echo -e "############################################################\n"
+echo -e "容器启动成功..."
+echo -e "############################################################\n"
+
 
 echo -e "##########写入登陆信息############"
 #echo "{ \"username\": \"$ADMIN_USERNAME\", \"password\": \"$ADMIN_PASSWORD\" }" > /ql/data/config/auth.json
@@ -130,6 +107,7 @@ if [ -n "$NOTIFY_CONFIG" ]; then
 else
     echo "没有检测到通知配置信息，不进行通知"
 fi
+
 
 tail -f /dev/null
 
