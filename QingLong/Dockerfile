@@ -119,7 +119,6 @@ RUN mkdir /ql/data && \
   chmod -R 777 /ql && \
   chmod -R 777 /var && \
   chmod -R 777 /usr/local && \
-  chmod -R 777 /etc/nginx && \
   chmod -R 777 /run && \
   chmod -R 777 /usr && \
   chmod -R 777 /root 
