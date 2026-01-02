@@ -71,7 +71,6 @@ RUN set -x && \
   perl \
   openssl \
   openssh-client \
-  nginx \
   jq \
   procps \
   netcat \
