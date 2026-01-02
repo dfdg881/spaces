@@ -112,7 +112,3 @@ if [ -n "$NOTIFY_CONFIG" ]; then
 else
     echo "没有检测到通知配置信息，不进行通知"
 fi
-
-tail -f /dev/null
-
-exec "$@"
