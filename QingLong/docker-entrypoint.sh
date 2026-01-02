@@ -1,11 +1,19 @@
 #!/bin/bash
 
+# 青龙面板启动脚本（适配官方 whyour/qinglong:debian 镜像）
+# 已移除 code-server 和 nginx
+
 dir_shell=/ql/shell
 . $dir_shell/share.sh
 . $dir_shell/env.sh
 
-echo -e "======================写入rclone配置========================\n"
-echo "$RCLONE_CONF" > ~/.config/rclone/rclone.conf
+# 写入 rclone 配置（如果通过环境变量传入）
+if [ -n "$RCLONE_CONF" ]; then
+    echo -e "======================写入rclone配置========================\n"
+    mkdir -p ~/.config/rclone
+    echo "$RCLONE_CONF" > ~/.config/rclone/rclone.conf
+    echo "Rclone 配置已写入"
+fi
 
 echo -e "======================1. 检测配置文件========================\n"
 import_config "$@"
@@ -32,15 +40,14 @@ if [[ $EnableExtraShell == true ]]; then
   echo -e "自定义脚本后台执行中...\n"
 fi
 
-
 echo -e "############################################################\n"
 echo -e "容器启动成功..."
 echo -e "############################################################\n"
 
-
+# 初始化认证信息
 echo -e "##########写入登陆信息############"
-#echo "{ \"username\": \"$ADMIN_USERNAME\", \"password\": \"$ADMIN_PASSWORD\" }" > /ql/data/config/auth.json
 dir_root=/ql && source /ql/shell/api.sh 
+
 init_auth_info() {
   local body="$1"
   local tip="$2"
@@ -68,45 +75,40 @@ init_auth_info() {
 
 init_auth_info "\"username\": \"$ADMIN_USERNAME\", \"password\": \"$ADMIN_PASSWORD\"" "Change Password"
 
+# rclone 同步功能
 if [ -n "$RCLONE_CONF" ]; then
   echo -e "##########同步备份############"
-  # 指定远程文件夹路径，格式为 remote:path
-  REMOTE_FOLDER="huggingface:/qinglong"
-
-  # 使用 rclone ls 命令列出文件夹内容，将输出和错误分别捕获
-  OUTPUT=$(rclone ls "$REMOTE_FOLDER" 2>&1)
-
-  # 获取 rclone 命令的退出状态码
-  EXIT_CODE=$?
-
-  # 判断退出状态码
-  if [ $EXIT_CODE -eq 0 ]; then
-    # rclone 命令成功执行，检查文件夹是否为空
-    if [ -z "$OUTPUT" ]; then
-      #为空不处理
-      #rclone sync --interactive /ql $REMOTE_FOLDER
-      echo "初次安装"
+  REMOTE_FOLDER=${RCLONE_REMOTE:-"huggingface:/qinglong"}
+  
+  # 等待青龙服务启动
+  echo "等待青龙服务启动..."
+  sleep 5
+  
+  # 检查 rclone 配置和远程文件夹
+  echo "检查远程备份..."
+  if rclone lsd "$REMOTE_FOLDER" 2>/dev/null; then
+    echo "检测到远程备份文件，尝试恢复..."
+    mkdir -p /ql/.tmp/data
+    if rclone sync "$REMOTE_FOLDER" /ql/.tmp/data; then
+      echo "同步成功，恢复数据..."
+      real_time=true ql reload data
     else
-      #echo "文件夹不为空"
-      mkdir /ql/.tmp/data
-      rclone sync $REMOTE_FOLDER /ql/.tmp/data && real_time=true ql reload data
+      echo "同步失败，可能是权限问题或网络问题"
     fi
-  elif [[ "$OUTPUT" == *"directory not found"* ]]; then
-    echo "错误：文件夹不存在"
   else
-    echo "错误：$OUTPUT"
+    echo "首次启动或远程文件夹为空，跳过恢复"
+    echo "提示：可以使用 rclone 手动备份数据到 $REMOTE_FOLDER"
   fi
 else
-    echo "没有检测到Rclone配置信息"
+  echo "没有检测到Rclone配置信息，跳过同步"
+  echo "提示：通过 RCLONE_CONF 环境变量传入 rclone 配置"
 fi
 
+# 发送通知
 if [ -n "$NOTIFY_CONFIG" ]; then
-    python /notify.py
+    echo "发送启动通知..."
+    python /notify.py 2>/dev/null || true
     dir_root=/ql && source /ql/shell/api.sh && notify_api '青龙服务启动通知' '青龙面板成功启动'
 else
     echo "没有检测到通知配置信息，不进行通知"
 fi
-
-tail -f /dev/null
-
-exec "$@"
