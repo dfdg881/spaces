@@ -26,14 +26,6 @@ if [ -n "$RCLONE_CONF" ]; then
 fi
 
 echo -e "##########启动容器############"
-
-# 手动创建符号链接
-ln -sf $dir_shell/update.sh /usr/local/bin/ql
-ln -sf $dir_shell/task.sh /usr/local/bin/task
-
-# 赋予执行权限
-chmod +x . $dir_shell/*.sh
-
 # Fix DNS resolution issues in Alpine Linux
 # Alpine uses musl libc which has known DNS resolver issues with certain domains
 # Adding ndots:0 prevents unnecessary search domain appending
