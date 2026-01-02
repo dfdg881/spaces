@@ -53,6 +53,18 @@ RUN set -x && \
   apt-get upgrade -y && \
   apt-get install --no-install-recommends -y git \
   curl \
+  sudo \
+  build-essential \
+  default-jdk \
+  default-jre \
+  g++ \
+  gcc \
+  libzbar0 \
+  fish \
+  ffmpeg \
+  nmap \
+  ca-certificates \
+  zsh \
   cron \
   wget \
   tzdata \
@@ -81,6 +93,7 @@ RUN set -x && \
   chmod u+s /usr/sbin/cron && \
   ulimit -c 0
 
+
 ARG SOURCE_COMMIT
 RUN git clone --depth=1 -b ${QL_BRANCH} ${QL_URL} ${QL_DIR} && \
   cd ${QL_DIR} && \
@@ -94,6 +107,7 @@ RUN git clone --depth=1 -b ${QL_BRANCH} ${QL_URL} ${QL_DIR} && \
   rm -f ${QL_DIR}/docker/docker-entrypoint.sh
 
 COPY docker-entrypoint.sh ${QL_DIR}/docker
+COPY front.conf ${QL_DIR}/docker/front.conf
 
 RUN mkdir /ql/data && \
   mkdir /ql/data/config && \
@@ -115,14 +129,6 @@ COPY --from=builder /tmp/build/node_modules/. /ql/node_modules/
 COPY services.json /ql/node_modules/nodemailer/lib/well-known/
 COPY notify.py /notify.py
 
-WORKDIR ${QL_DIR}
-
-
-# Set up a new user named "user" with user ID 1000
-RUN useradd -m -u 1000 user
-
-# Switch to the "user" user
-USER user
 
 # 创建rclone配置文件
 RUN rclone config -h
@@ -133,5 +139,5 @@ HEALTHCHECK --interval=5s --timeout=2s --retries=20 \
 ENTRYPOINT ["./docker/docker-entrypoint.sh"]
 
 VOLUME /ql/data
-  
+
 EXPOSE 5700
