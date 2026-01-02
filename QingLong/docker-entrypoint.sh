@@ -27,6 +27,13 @@ fi
 
 echo -e "##########启动容器############"
 
+# 手动创建符号链接
+ln -sf $dir_shell/update.sh /usr/local/bin/ql
+ln -sf $dir_shell/task.sh /usr/local/bin/task
+
+# 赋予执行权限
+chmod +x . $dir_shell/*.sh
+
 # Fix DNS resolution issues in Alpine Linux
 # Alpine uses musl libc which has known DNS resolver issues with certain domains
 # Adding ndots:0 prevents unnecessary search domain appending
@@ -62,10 +69,9 @@ fi
 
 log_with_style "SUCCESS" "🎉  容器启动成功!"
 
-# 初始化认证信息
 echo -e "##########写入登陆信息############"
+#echo "{ \"username\": \"$ADMIN_USERNAME\", \"password\": \"$ADMIN_PASSWORD\" }" > /ql/data/config/auth.json
 dir_root=/ql && source /ql/shell/api.sh 
-
 init_auth_info() {
   local body="$1"
   local tip="$2"
@@ -93,39 +99,41 @@ init_auth_info() {
 
 init_auth_info "\"username\": \"$ADMIN_USERNAME\", \"password\": \"$ADMIN_PASSWORD\"" "Change Password"
 
-# rclone 同步功能
 if [ -n "$RCLONE_CONF" ]; then
   echo -e "##########同步备份############"
-  REMOTE_FOLDER=${RCLONE_REMOTE:-"huggingface:/qinglong"}
-  
-  # 等待青龙服务启动
-  echo "等待青龙服务启动..."
-  sleep 5
-  
-  # 检查 rclone 配置和远程文件夹
-  echo "检查远程备份..."
-  if rclone lsd "$REMOTE_FOLDER" 2>/dev/null; then
-    echo "检测到远程备份文件，尝试恢复..."
-    mkdir -p /ql/.tmp/data
-    if rclone sync "$REMOTE_FOLDER" /ql/.tmp/data; then
-      echo "同步成功，恢复数据..."
-      real_time=true ql reload data
+  # 指定远程文件夹路径，格式为 remote:path
+  REMOTE_FOLDER="huggingface:/qinglong"
+
+  # 使用 rclone ls 命令列出文件夹内容，将输出和错误分别捕获
+  OUTPUT=$(rclone ls "$REMOTE_FOLDER" 2>&1)
+
+  # 获取 rclone 命令的退出状态码
+  EXIT_CODE=$?
+
+  # 判断退出状态码
+  if [ $EXIT_CODE -eq 0 ]; then
+    # rclone 命令成功执行，检查文件夹是否为空
+    if [ -z "$OUTPUT" ]; then
+      #为空不处理
+      #rclone sync --interactive /ql $REMOTE_FOLDER
+      echo "初次安装"
     else
-      echo "同步失败，可能是权限问题或网络问题"
+      #echo "文件夹不为空"
+      source /ql/shell/update.sh
+      mkdir /ql/.tmp/data
+      rclone sync $REMOTE_FOLDER /ql/.tmp/data && real_time=true reload_qinglong data
     fi
+  elif [[ "$OUTPUT" == *"directory not found"* ]]; then
+    echo "错误：文件夹不存在"
   else
-    echo "首次启动或远程文件夹为空，跳过恢复"
-    echo "提示：可以使用 rclone 手动备份数据到 $REMOTE_FOLDER"
+    echo "错误：$OUTPUT"
   fi
 else
-  echo "没有检测到Rclone配置信息，跳过同步"
-  echo "提示：通过 RCLONE_CONF 环境变量传入 rclone 配置"
+    echo "没有检测到Rclone配置信息"
 fi
 
-# 发送通知
 if [ -n "$NOTIFY_CONFIG" ]; then
-    echo "发送启动通知..."
-    python /notify.py 2>/dev/null || true
+    python /notify.py
     dir_root=/ql && source /ql/shell/api.sh && notify_api '青龙服务启动通知' '青龙面板成功启动'
 else
     echo "没有检测到通知配置信息，不进行通知"
