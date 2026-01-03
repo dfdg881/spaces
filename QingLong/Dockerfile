@@ -19,6 +19,7 @@ HEALTHCHECK --interval=5s --timeout=2s --retries=20 \
   CMD curl -sf --noproxy '*' http://127.0.0.1:5400/api/health || exit 1
 
 # 复制自定义启动脚本（如果需要 rclone 自动同步）
+COPY notify.py /notify.py
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
