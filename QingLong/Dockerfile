@@ -46,9 +46,10 @@ RUN chmod -R 777 /ql && \
   chmod -R 777 /usr && \
   chmod -R 777 /root 
 
+COPY docker-entrypoint.sh ${QL_DIR}/docker
 COPY notify.py /notify.py
-COPY docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
+COPY services.json /ql/node_modules/nodemailer/lib/well-known/
+RUN chmod a+x ${QL_DIR}/docker/docker-entrypoint.sh
 
 WORKDIR ${QL_DIR}
 
