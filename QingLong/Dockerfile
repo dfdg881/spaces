@@ -1,5 +1,5 @@
 # 使用官方青龙镜像作为基础
-FROM whyour/qinglong:debian
+FROM ghcr.io/whyour/qinglong:develop
 
 # 安装 rclone
 RUN apt-get update && \
