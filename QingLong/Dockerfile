@@ -1,48 +1,8 @@
-FROM node:22-slim AS nodebuilder
+# 使用官方青龙镜像作为基础
+FROM whyour/qinglong:debian
 
-FROM python:3.11-slim-bookworm AS builder
-ARG QL_MAINTAINER="whyour"
-LABEL maintainer="${QL_MAINTAINER}"
-ARG QL_URL=https://github.com/${QL_MAINTAINER}/qinglong.git
-ARG QL_BRANCH=debian
-ENV QL_DIR=/ql_tmp
-COPY --from=nodebuilder /usr/local/bin/node /usr/local/bin/
-COPY --from=nodebuilder /usr/local/lib/node_modules/. /usr/local/lib/node_modules/
-RUN set -x && \
-  ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
-  apt-get update && \
-  apt-get install --no-install-recommends -y libatomic1 git && \
-  git clone --depth=1 -b ${QL_BRANCH} ${QL_URL} ${QL_DIR} && \
-  mkdir /tmp/build && \
-  cp ${QL_DIR}/package.json ${QL_DIR}/.npmrc ${QL_DIR}/pnpm-lock.yaml /tmp/build/ && \
-  npm i -g pnpm@8.3.1 && \
-  cd /tmp/build && \
-  pnpm install --prod && \
-  rm -rf ${QL_DIR}
-
-
-FROM python:3.11-slim-bookworm
-
-ARG QL_MAINTAINER="whyour"
-LABEL maintainer="${QL_MAINTAINER}"
-ARG QL_URL=https://github.com/${QL_MAINTAINER}/qinglong.git
-ARG QL_BRANCH=debian
-ARG PYTHON_SHORT_VERSION=3.11
-
-ENV REMOTE_FOLDER="huggingface:/qinglong"
-ENV QL_DIR=/ql \
-  QL_BRANCH=${QL_BRANCH} \
-  LANG=C.UTF-8 \
-  SHELL=/bin/bash \
-  PS1="\u@\h:\w \$ "
-
-COPY --from=nodebuilder /usr/local/bin/node /usr/local/bin/
-COPY --from=nodebuilder /usr/local/lib/node_modules/. /usr/local/lib/node_modules/
-
-RUN set -x && \
-  ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
-  ln -s /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx && \
-  apt-get update && \
+# 安装 rclone
+RUN apt-get update && \
   apt-get upgrade -y && \
   apt-get install --no-install-recommends -y git \
   curl \
@@ -69,8 +29,15 @@ RUN set -x && \
   rm -rf /root/.npm && \
   rm -rf /etc/apt/apt.conf.d/docker-clean && \
   ulimit -c 0
+  
+# 创建rclone配置文件
+RUN rclone config -h
 
-RUN mkdir -p ${QL_DIR}
+HEALTHCHECK --interval=5s --timeout=2s --retries=20 \
+  CMD curl -sf --noproxy '*' http://127.0.0.1:5400/api/health || exit 1
+
+# 复制自定义启动脚本（如果需要 rclone 自动同步）
+ENV QL_DIR=/ql \
 
 RUN chmod -R 777 /ql && \
   chmod -R 777 /var && \
@@ -80,44 +47,12 @@ RUN chmod -R 777 /ql && \
   chmod -R 777 /root 
 
 COPY notify.py /notify.py
-
-ARG SOURCE_COMMIT
-RUN git clone --depth=1 -b ${QL_BRANCH} ${QL_URL} ${QL_DIR} && \
-  cd ${QL_DIR} && \
-  cp -f .env.example .env && \
-  chmod 777 ${QL_DIR}/shell/*.sh && \
-  chmod 777 ${QL_DIR}/docker/*.sh && \
-  git clone --depth=1 -b ${QL_BRANCH} https://github.com/${QL_MAINTAINER}/qinglong-static.git /tmp/static && \
-  mkdir -p ${QL_DIR}/static && \
-  cp -rf /tmp/static/* ${QL_DIR}/static && \
-  rm -rf /tmp/static
-
-ENV PNPM_HOME=${QL_DIR}/data/dep_cache/node \
-  PYTHON_HOME=${QL_DIR}/data/dep_cache/python3 \
-  PYTHONUSERBASE=${QL_DIR}/data/dep_cache/python3
-
-ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${PNPM_HOME}:${PYTHON_HOME}/bin \
-  NODE_PATH=/usr/local/bin:/usr/local/lib/node_modules:${PNPM_HOME}/global/5/node_modules \
-  PIP_CACHE_DIR=${PYTHON_HOME}/pip \
-  PYTHONPATH=${PYTHON_HOME}:${PYTHON_HOME}/lib/python${PYTHON_SHORT_VERSION}:${PYTHON_HOME}/lib/python${PYTHON_SHORT_VERSION}/site-packages
-
-RUN pip3 install --prefix ${PYTHON_HOME} requests
-RUN rm -f ${QL_DIR}/docker/docker-entrypoint.sh
-
-COPY --from=builder /tmp/build/node_modules/. /ql/node_modules/
-COPY docker-entrypoint.sh ${QL_DIR}/docker
-COPY services.json /ql/node_modules/nodemailer/lib/well-known/
-
-RUN chmod a+x ${QL_DIR}/docker/docker-entrypoint.sh
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 
 WORKDIR ${QL_DIR}
 
-# 创建rclone配置文件
-RUN rclone config -h
-
-HEALTHCHECK --interval=5s --timeout=2s --retries=20 \
-  CMD curl -sf --noproxy '*' http://127.0.0.1:5700/api/health || exit 1
-
+# 使用自定义启动脚本
 ENTRYPOINT ["./docker/docker-entrypoint.sh"]
 
 VOLUME /ql/data
