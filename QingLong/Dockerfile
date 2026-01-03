@@ -12,9 +12,11 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# 创建 rclone 配置目录
-RUN mkdir -p /root/.config/rclone && \
-    chmod -R 755 /root/.config/rclone
+# 创建rclone配置文件
+RUN rclone config -h
+
+HEALTHCHECK --interval=5s --timeout=2s --retries=20 \
+  CMD curl -sf --noproxy '*' http://127.0.0.1:5400/api/health || exit 1
 
 # 复制自定义启动脚本（如果需要 rclone 自动同步）
 COPY docker-entrypoint.sh /docker-entrypoint.sh
@@ -24,4 +26,5 @@ RUN chmod +x /docker-entrypoint.sh
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
 EXPOSE 5700
+
 VOLUME /ql/data
