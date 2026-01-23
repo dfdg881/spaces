@@ -12,6 +12,7 @@ RUN apt-get update && \
   openssl \
   openssh-client \
   iptables \
+  sudo \
   jq \
   procps \
   netcat-openbsd \
