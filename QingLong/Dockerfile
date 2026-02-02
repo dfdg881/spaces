@@ -16,7 +16,6 @@ RUN apt-get update && \
   netcat-openbsd \
   unzip \
   libatomic1 \
-  chromium-driver \
   rclone \
   sshpass && \
   apt-get clean && \
@@ -31,9 +30,6 @@ RUN apt-get update && \
   rm -rf /etc/apt/apt.conf.d/docker-clean && \
   ulimit -c 0
   
-#python依赖
-RUN pip3 install selenium opencv-python-headless ddddocr requests
-
 # 创建rclone配置文件
 RUN rclone config -h
 
