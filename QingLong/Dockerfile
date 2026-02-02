@@ -32,7 +32,7 @@ RUN apt-get update && \
   ulimit -c 0
   
 #python依赖
-pip3 install selenium opencv-python-headless ddddocr requests
+RUN pip3 install selenium opencv-python-headless ddddocr requests
 
 # 创建rclone配置文件
 RUN rclone config -h
