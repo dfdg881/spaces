@@ -13,8 +13,7 @@ DEFAULT_PASSWORD=$(tail -n 100 ~/.pm2/logs/baihu-out.log \
     | tail -n 1)
 
 echo  "默认用户名: admin"
-echo  "默认密码: $DEFAULT_PASSWORD"
-echo  "$ADMIN_PASSWORD"
+#echo  "默认密码: $DEFAULT_PASSWORD"
 
 echo "============重置密码==============="
 # 获取登陆响应Token
