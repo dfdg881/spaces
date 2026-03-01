@@ -1,4 +1,4 @@
-FROM ghcr.io/engigu/baihu:latest
+FROM ghcr.io/dfdg881/baihu1:latest-amd64
 
 ENV REMOTE_FOLDER="huggingface:/baihu"
 
