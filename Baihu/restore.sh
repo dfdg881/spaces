@@ -13,7 +13,6 @@ DEFAULT_PASSWORD=$(tail -n 100 ~/.pm2/logs/baihu-out.log \
     | tail -n 1)
 
 echo  "默认用户名: admin"
-echo  "$ADMIN_PASSWORD"
 #echo  "默认密码: $DEFAULT_PASSWORD"
 
 echo "============重置密码==============="
@@ -28,9 +27,11 @@ curl -c cookies.txt -s -D - -o /dev/null \
 
 sleep 1
 
-curl -b cookies.txt 'http://localhost:8052/api/v1/settings/password' \
+RESET_RESPONSE=$(
+  curl -b cookies.txt 'http://localhost:8052/api/v1/settings/password' \
   -H 'content-type: application/json' \
   --data-raw "{\"old_password\":\"$DEFAULT_PASSWORD\",\"new_password\":\"$ADMIN_PASSWORD\"}"
+)
 
 echo  "======================写入rclone配置========================\n"
 echo "$RCLONE_CONF" > ~/.config/rclone/rclone.conf
@@ -74,4 +75,3 @@ else
 fi
 
 tail -f /dev/null
-
