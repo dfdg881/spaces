@@ -28,11 +28,9 @@ curl -c cookies.txt -s -D - -o /dev/null \
 
 sleep 1
 
-RESET_RESPONSE=$(
-  curl -b cookies.txt 'http://localhost:8052/api/v1/settings/password' \
+curl -b cookies.txt 'http://localhost:8052/api/v1/settings/password' \
   -H 'content-type: application/json' \
   --data-raw "{\"old_password\":\"$DEFAULT_PASSWORD\",\"new_password\":\"$ADMIN_PASSWORD\"}"
-)
 
 echo  "======================写入rclone配置========================\n"
 echo "$RCLONE_CONF" > ~/.config/rclone/rclone.conf
