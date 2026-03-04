@@ -1,4 +1,4 @@
-FROM ghcr.io/engigu/baihu:1.0.11
+FROM ghcr.io/engigu/baihu:1.0.12
 
 ENV REMOTE_FOLDER="huggingface:/baihu"
 
