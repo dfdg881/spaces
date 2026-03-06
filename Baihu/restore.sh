@@ -58,11 +58,8 @@ if [ -n "$RCLONE_CONF" ]; then
       latest_file=$(rclone lsjson $REMOTE_FOLDER | jq -r 'sort_by(.ModTime) | last | .Path')
       # 复制到目标目录
       rclone copy $REMOTE_FOLDER/$latest_file /app/backup_tmp
-      RESTORE_RESPON=$(curl -b cookies.txt "http://localhost:8052/api/v1/settings/restore" \
-        -F "file=@/app/backup_tmp/$latest_file;type=application/zip" \
-        -H "Accept: */*" \
-        --compressed
-      )
+      RESTORE_RESPON=$(baihu restore $latest_file)
+      sleep 20
       rm -rf /app/backup_tmp
       sleep 20
       pm2 restart baihu
