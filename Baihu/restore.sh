@@ -58,7 +58,7 @@ if [ -n "$RCLONE_CONF" ]; then
       latest_file=$(rclone lsjson $REMOTE_FOLDER | jq -r 'sort_by(.ModTime) | last | .Path')
       # 复制到目标目录
       rclone copy $REMOTE_FOLDER/$latest_file /app/backup_tmp
-      RESTORE_RESPON=$(baihu restore $latest_file)
+      RESTORE_RESPON=$(baihu restore /app/backup_tmp/$latest_file)
       sleep 20
       rm -rf /app/backup_tmp
       sleep 20
