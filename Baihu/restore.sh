@@ -64,6 +64,8 @@ if [ -n "$RCLONE_CONF" ]; then
         --compressed
       )
       rm -rf /app/backup_tmp
+      sleep 20
+      pm2 restart baihu
     fi
   elif [[ "$OUTPUT" == *"directory not found"* ]]; then
     echo "错误：文件夹不存在"
