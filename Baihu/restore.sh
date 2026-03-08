@@ -6,32 +6,6 @@ pm2 start "./baihu server" --name baihu
 echo "10秒后开始恢复任务..."
 sleep 10
 
-#从日志中获取密码
-echo  "======================从日志中获取密码========================\n"
-DEFAULT_PASSWORD=$(tail -n 100 ~/.pm2/logs/baihu-out.log \
-    | grep -oP '密\s*码:\s*\K[^,[:space:]]+' \
-    | tail -n 1)
-
-echo  "默认用户名: admin"
-#echo  "默认密码: $DEFAULT_PASSWORD"
-
-echo "============重置密码==============="
-# 获取登陆响应Token
-BHToken=$(
-curl -c cookies.txt -s -D - -o /dev/null \
-  'http://localhost:8052/api/v1/auth/login' \
-  -H 'content-type: application/json' \
-  --data-raw "{\"username\":\"admin\",\"password\":\"$DEFAULT_PASSWORD\"}" \
-| awk -F'[=;]' '/Set-Cookie: BHToken=/{print $2}'
-)
-
-sleep 1
-
-RESET_RESPONSE=$(
-  curl -b cookies.txt 'http://localhost:8052/api/v1/settings/password' \
-  -H 'content-type: application/json' \
-  --data-raw "{\"old_password\":\"$DEFAULT_PASSWORD\",\"new_password\":\"$ADMIN_PASSWORD\"}"
-)
 
 echo  "======================写入rclone配置========================\n"
 echo "$RCLONE_CONF" > ~/.config/rclone/rclone.conf
