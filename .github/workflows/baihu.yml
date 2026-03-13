@@ -42,3 +42,11 @@ jobs:
             org.opencontainers.image.licenses=MIT
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Install and configure the Koyeb CLI
+        uses: koyeb-community/koyeb-actions@v2
+        with:
+          api_token: "${{ secrets.KOYEB_TOKEN }}"
+
+      - name: Deploy to Koyeb
+        run: koyeb service redeploy promising-vivianna/baihu
