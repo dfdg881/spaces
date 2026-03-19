@@ -10,4 +10,3 @@ RUN cat /restore.sh >> /app/docker-entrypoint.sh
 RUN mise install dotnet@8.0.200
 RUN mise exec python@3.13.12 -- pip install requests
 #RUN sed -i '50r /restore.sh' /app/docker-entrypoint.sh
-mise use -g node@lts
