@@ -1,4 +1,3 @@
-mise use -g node@latest
 npm install pm2 -g
 #开启白虎服务
 pm2 start "./baihu server" --name baihu
