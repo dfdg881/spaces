@@ -8,5 +8,7 @@ COPY ./restore.sh /
 RUN sed -i '/^exec \.\/baihu server$/d' /app/docker-entrypoint.sh
 RUN cat /restore.sh >> /app/docker-entrypoint.sh
 RUN mise install dotnet@8.0.200
+RUN mise use -g node@23.11.1
+RUN mise use -g python@3.13.12
 RUN mise exec python@3.13.12 -- pip install requests
 #RUN sed -i '50r /restore.sh' /app/docker-entrypoint.sh
