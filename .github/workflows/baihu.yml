@@ -4,11 +4,17 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  Build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
+    inputs:
+      deploy_koyeb:
+        description: 'Deploy to Koyeb'
+        required: true
+        default: 'true'
+        type: boolean      
 
     steps:
       - name: Checkout repository
@@ -42,7 +48,9 @@ jobs:
             org.opencontainers.image.licenses=MIT
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
+  Deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.deploy_koyeb == 'true' }}
       - name: Install and configure the Koyeb CLI
         uses: koyeb-community/koyeb-actions@v2
         with:
