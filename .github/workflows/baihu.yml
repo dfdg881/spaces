@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       deploy_koyeb:
-        description: 'Deploy to Koyeb?'
+        description: 'Deploy to Koyeb'
         required: true
         default: 'true'
         type: boolean
