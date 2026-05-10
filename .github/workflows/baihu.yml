@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  Build:
+  build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -48,7 +48,7 @@ jobs:
             org.opencontainers.image.licenses=MIT
           cache-from: type=gha
           cache-to: type=gha,mode=max
-  Deploy:
+  deploy:
     runs-on: ubuntu-latest
     if: ${{ github.event.inputs.deploy_koyeb == 'true' }}
       - name: Install and configure the Koyeb CLI
