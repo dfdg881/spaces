@@ -1,4 +1,4 @@
-FROM ghcr.io/engigu/baihu:1.1.20
+FROM ghcr.io/engigu/baihu:latest
 
 ENV REMOTE_FOLDER="huggingface:/baihu"
 COPY ./apt.sh /
