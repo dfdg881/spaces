@@ -1,8 +1,9 @@
 FROM ghcr.io/engigu/baihu:latest
 
 ENV REMOTE_FOLDER="huggingface:/baihu"
-
-RUN bash apt.sh
+COPY ./apt.sh /
+RUN bash /apt.sh
+RUN rm /apt.sh
 RUN apt-get update && apt-get install -y rclone jq libicu-dev
 RUN rclone config -h
 COPY ./restore.sh /
