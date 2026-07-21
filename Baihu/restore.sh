@@ -33,7 +33,6 @@ if [ -n "$RCLONE_CONF" ]; then
       rclone copy $REMOTE_FOLDER/$latest_file /app/backup_tmp
       ./baihu restore /app/backup_tmp/$latest_file
       rm -rf /app/backup_tmp
-      pm2 restart baihu
     fi
   elif [[ "$OUTPUT" == *"directory not found"* ]]; then
     echo "错误：文件夹不存在"
