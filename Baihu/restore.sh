@@ -1,5 +1,6 @@
 npm install pm2 -g
 #开启白虎服务
+cd /app
 pm2 start "./baihu server" --name baihu
 
 echo "10秒后开始恢复任务..."
