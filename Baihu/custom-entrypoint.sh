@@ -26,4 +26,5 @@ cd /app
 # 3) 执行原来的 restore.sh（rclone 恢复 + pm2 启动 baihu + tail -f 保活）
 #    restore.sh 内部已经 pm2 start "./baihu server" 并 tail -f /dev/null，
 #    所以这里不要再 exec baihu server，否则会重复拉起。
-bash /app/restore.sh
+cd /
+bash restore.sh
