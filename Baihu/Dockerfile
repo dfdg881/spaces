@@ -4,11 +4,7 @@ ENV REMOTE_FOLDER="huggingface:/baihu"
 
 RUN apt-get update && apt-get install -y rclone jq libicu-dev
 RUN rclone config -h
-
-# 原来的 restore.sh 逻辑（rclone 恢复 + pm2 启动）原样保留
 COPY ./restore.sh /
-
-# 真正的自定义入口：先跑基础初始化，再跑你的 git clone / restore，最后拉起服务
 COPY ./custom-entrypoint.sh /app/custom-entrypoint.sh
 RUN chmod +x /app/custom-entrypoint.sh
 RUN mise install dotnet@10.0.401
