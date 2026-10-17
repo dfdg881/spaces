@@ -10,6 +10,4 @@ RUN mise use -g node@23.11.1
 RUN mise use -g python@3.13.12
 RUN mise exec python@3.13.12 -- pip install requests
 RUN mise exec python@3.13.12 -- pip install cryptography
-
-# 覆盖基础镜像的 ENTRYPOINT，改用自定义启动脚本
 ENTRYPOINT ["/app/custom-entrypoint.sh"]
